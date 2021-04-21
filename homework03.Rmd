@@ -1,0 +1,117 @@
+---
+title: "Homework 03"
+author: "Avery Shepherd"
+date: "4/19/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(tidyverse)
+```
+
+```{r}
+f <- "https://raw.githubusercontent.com/difiore/ada-2021-datasets/main/KamilarAndCooperData.csv"
+d <- read_csv(f, col_names = T)
+glimpse(d)
+```
+
+
+Fit weaning age ~ brain size regression model and produce a scatterplot with the fitted line superimposed upon the data
+```{r}
+lin_lm <- lm(data = d, WeaningAge_d ~ Brain_Size_Species_Mean)
+lin_lm.intercept = coef(lin_lm)[[1]]
+lin_lm.slope = coef(lin_lm)[[2]]
+ggplot(d, aes(x = Brain_Size_Species_Mean, y = WeaningAge_d)) +
+  geom_point() + 
+  geom_smooth(method = "lm", se = F) + 
+  annotate(geom = "text", x = 400, y = 250, label = paste0("y = ", round(lin_lm.intercept, 2), " + " , round(lin_lm.slope, 2), "x"))
+```
+
+Identify and interpret the point estimate of the slope (β1), as well as the outcome of the test associated with the hypotheses H0:β1=0,HA:β1≠0. Also, find a 90% CI for the slope (β1) parameter.
+```{r}
+summary(lin_lm)
+ci <- confint(lin_lm, level = .9)
+```
+The point slope estimate is 2.6371, meaning on average, if age goes up 2.6371 years, brain size will increase by one. We also reject the null hypothesis, meaning there is a significant relationship between brain size and age (p < 2e-16).
+
+
+Using your model, add lines for the 90% confidence and prediction interval bands on the plot, and add a legend to differentiate between the lines
+```{r}
+ggplot(d, aes(x = Brain_Size_Species_Mean, y = WeaningAge_d)) +
+  geom_point() + 
+  geom_smooth(method = "lm", level = .9) + 
+  annotate(geom = "text", 
+           x = 400, y = 250, 
+           label = paste0("y = ", round(lin_lm.intercept, 2), " + " , round(lin_lm.slope, 2), "x"))
+```
+
+Produce a point estimate and associated 90% prediction interval for the weaning age of a species whose brain weight is 750 gm. Do you trust the model to predict observations accurately for this value of the explanatory variable? Why or why not?
+```{r}
+predict(lin_lm, newdata = data.frame(Brain_Size_Species_Mean = 750), 
+        interval = "predict", 
+        level = .9)
+```
+I would not necessarily trust the model to predict the value accurately because of how large the value is. The value is an outlier compared to the val?preues that the model was made from.
+
+
+
+Fit log(weaning age) ~ log(brain size) regression model and produce a scatterplot with the fitted line superimposed upon the data
+```{r}
+log_lm <- lm(data = d, log(WeaningAge_d) ~ log(Brain_Size_Species_Mean))
+log_lm.intercept = coef(log_lm)[[1]]
+log_lm.slope = coef(log_lm)[[2]]
+ggplot(d, aes(x = log(Brain_Size_Species_Mean), y = log(WeaningAge_d))) +
+  geom_point() + 
+  geom_smooth(method = "lm", se = F) + 
+  annotate(geom = "text", x = 5, y = 5, label = paste0("y = ", round(log_lm.intercept, 2), " + " , round(log_lm.slope, 2), "x"))
+```
+
+Identify and interpret the point estimate of the slope (β1), as well as the outcome of the test associated with the hypotheses H0:β1=0,HA:β1≠0. Also, find a 90% CI for the slope (β1) parameter.
+```{r}
+summary(log_lm)
+ci <- confint(log_lm, level = .9)
+```
+The point slope estimate is 0.57116, meaning on average, if age goes up 0.57116 years, brain size will increase by one. We also reject the null hypothesis, meaning there is a significant relationship between brain size and age (p < 2e-16).
+
+Using your model, add lines for the 90% confidence and prediction interval bands on the plot, and add a legend to differentiate between the lines
+```{r}
+ggplot(d, aes(x = log(Brain_Size_Species_Mean), y = log(WeaningAge_d))) +
+  geom_point() + 
+  geom_smooth(method = "lm", level = .9) + 
+  annotate(geom = "text", 
+           x = 5, y = 5, 
+           label = paste0("y = ", round(log_lm.intercept, 2), " + " , round(log_lm.slope, 2), "x"))
+```
+
+Produce a point estimate and associated 90% prediction interval for the weaning age of a species whose brain weight is 750 gm. Do you trust the model to predict observations accurately for this value of the explanatory variable? Why or why not?
+```{r}
+predict(lin_lm, newdata = data.frame(Brain_Size_Species_Mean = log(750)), 
+        interval = "predict", 
+        level = .9)
+```
+I would trust this model more as the log value of 750 is much closer the values the model was made on.
+
+Looking at your two models (i.e., untransformed versus log-log transformed), which do you think is better? Why?
+*I think that the log transformed model is better because when the values are logged it becomes a much more linear relationship, meaning the slope is more accurate for the values. 
+
+
+```{r}
+
+```
+
+```{r}
+
+```
+
+```{r}
+
+```
+
+```{r}
+
+```
+
