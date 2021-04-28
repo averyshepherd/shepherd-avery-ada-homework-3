@@ -11,6 +11,8 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ```{r}
 library(tidyverse)
+library(infer)
+library(simpleboot)
 ```
 
 ```{r}
@@ -20,6 +22,9 @@ glimpse(d)
 ```
 
 
+## Chalenge 1
+
+### Linear model
 Fit weaning age ~ brain size regression model and produce a scatterplot with the fitted line superimposed upon the data
 ```{r}
 lin_lm <- lm(data = d, WeaningAge_d ~ Brain_Size_Species_Mean)
@@ -57,7 +62,7 @@ predict(lin_lm, newdata = data.frame(Brain_Size_Species_Mean = 750),
 ```
 I would not necessarily trust the model to predict the value accurately because of how large the value is. The value is an outlier compared to the val?preues that the model was made from.
 
-
+### Logged Model
 
 Fit log(weaning age) ~ log(brain size) regression model and produce a scatterplot with the fitted line superimposed upon the data
 ```{r}
@@ -95,9 +100,53 @@ predict(lin_lm, newdata = data.frame(Brain_Size_Species_Mean = log(750)),
 ```
 I would trust this model more as the log value of 750 is much closer the values the model was made on.
 
+
 Looking at your two models (i.e., untransformed versus log-log transformed), which do you think is better? Why?
-*I think that the log transformed model is better because when the values are logged it becomes a much more linear relationship, meaning the slope is more accurate for the values. 
+*I think that the log transformed model is better because when the values are logged it becomes a much more linear relationship, meaning the slope is more accurate for the values.*
 
+
+## Challenge 2
+
+Using the “KamilarAndCooperData.csv” dataset, run a linear regression looking at log(MeanGroupSize) in relation to log(Body_mass_female_mean) and report your β coeffiecients (slope and intercept).
+```{r}
+d$logMeanGroupSize <- log(d$MeanGroupSize)
+d$logBody_mass_female_mean <- log(d$Body_mass_female_mean)
+c2lm <- lm(data = d, logMeanGroupSize ~ logBody_mass_female_mean)
+summary(c2lm)
+```
+β0 is -1.7772580 and β1 is 0.5062813 
+
+Then, use bootstrapping to sample from the dataset 1000 times with replacement, each time fitting the same model and calculating the appropriate coefficients. This generates a bootstrap sampling distribution for each β coefficient. Plot a histogram of these sampling distributions for β0 and β1.
+```{r}
+boot_lm <- lm.boot(c2lm, 1000, rows = T)
+boot_coefs <- data.frame(t(samples(boot_lm, "coef")))
+ggplot(boot_coefs, aes(x = X.Intercept.)) + geom_histogram(bins = 50)
+ggplot(boot_coefs, aes(x = logBody_mass_female_mean)) + geom_histogram(bins = 50)
+```
+
+Estimate the standard error for each of your  
+β coefficients as the standard deviation of the sampling distribution from your bootstrap.
+```{r}
+coef(summary(boot_lm))[, "Std. Error"]
+```
+
+Also determine the 95% CI for each of your  
+β coefficients based on the appropriate quantiles from your sampling distribution
+```{r}
+confint(boot_lm, level = .95)
+```
+
+How do the SEs estimated from the bootstrap sampling distribution compare to those estimated mathematically as part of lm() function?
+```{r}
+coef(summary(c2lm))[, "Std. Error"]
+```
+They're the same.... but I am pretty sure they are not supposed to be, and the SE for the bootstrap sampling distribution should have a lower SE.
+
+How do your bootstrap CIs compare to those estimated mathematically as part of the lm() function?
+```{r}
+confint(c2lm, level = .95)
+```
+These are also the same, though I am pretty sure that the confidence interval should be smaller for the bootstrap
 
 ```{r}
 
@@ -114,4 +163,5 @@ Looking at your two models (i.e., untransformed versus log-log transformed), whi
 ```{r}
 
 ```
+
 
