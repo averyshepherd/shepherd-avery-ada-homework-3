@@ -148,8 +148,14 @@ confint(c2lm, level = .95)
 ```
 These are also the same, though I am pretty sure that the confidence interval should be smaller for the bootstrap
 
-```{r}
 
+## Challenge 3
+Write your own function, called boot_lm(), that takes as its arguments a dataframe (d=), a linear model (model=, written as a character string, e.g., “logGS ~ logBM”), a user-defined confidence interval level (conf.level=, with default “0.95”), and a number of bootstrap replicates (reps=, with default “1000”).
+```{r}
+boot_lm <- function(d, model, conf.level=.95, reps=1000) {
+  
+  
+}
 ```
 
 ```{r}
