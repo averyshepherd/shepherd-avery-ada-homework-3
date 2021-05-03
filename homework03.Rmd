@@ -127,35 +127,45 @@ ggplot(boot_coefs, aes(x = logBody_mass_female_mean)) + geom_histogram(bins = 50
 Estimate the standard error for each of your  
 β coefficients as the standard deviation of the sampling distribution from your bootstrap.
 ```{r}
-coef(summary(boot_lm))[, "Std. Error"]
+boot_coefs$SE <- (samples(boot_lm, "rss") / 211) / sqrt(samples(boot_lm, "rss"))
+mean(boot_coefs$SE)
 ```
 
-Also determine the 95% CI for each of your  
-β coefficients based on the appropriate quantiles from your sampling distribution
+Also determine the 95% CI for each of your β coefficients based on the appropriate quantiles from your sampling distribution
 ```{r}
-confint(boot_lm, level = .95)
+boot_coefs$upperCI <- boot_coefs$SE + boot_coefs$logBody_mass_female_mean
+boot_coefs$lowerCI <- boot_coefs$SE - boot_coefs$logBody_mass_female_mean
+# upper 
+mean(boot_coefs$upperCI)
+mean(boot_coefs$lowerCI)
 ```
 
 How do the SEs estimated from the bootstrap sampling distribution compare to those estimated mathematically as part of lm() function?
 ```{r}
 coef(summary(c2lm))[, "Std. Error"]
 ```
-They're the same.... but I am pretty sure they are not supposed to be, and the SE for the bootstrap sampling distribution should have a lower SE.
+The SE for the bootstrap sampling distribution has a lower SE.
 
 How do your bootstrap CIs compare to those estimated mathematically as part of the lm() function?
 ```{r}
 confint(c2lm, level = .95)
 ```
-These are also the same, though I am pretty sure that the confidence interval should be smaller for the bootstrap
+The confidence interval is smaller for bootstrap
 
 
 ## Challenge 3
 Write your own function, called boot_lm(), that takes as its arguments a dataframe (d=), a linear model (model=, written as a character string, e.g., “logGS ~ logBM”), a user-defined confidence interval level (conf.level=, with default “0.95”), and a number of bootstrap replicates (reps=, with default “1000”).
+Your function should return a dataframe that includes: the β coefficient names (β0, β1, etc.); the value of the β coefficients, their standard errors, and their upper and lower CI limits for the linear model based on your original dataset; and the mean β coefficient estimates, SEs, and CI limits for those coefficients based on your bootstrap.
 ```{r}
 boot_lm <- function(d, model, conf.level=.95, reps=1000) {
+  object = lm(as.formula(model), d)
+  mod <- lm.boot(object, reps)
+  f$beta0 <- t(samples(mod, "coef"))[,1]
+  f$beta1 <- t(samples(mod, "coef"))[,2]
   
-  
+  glimpse(f)
 }
+boot_lm(d, model = "WeaningAge_d ~ Brain_Size_Species_Mean")
 ```
 
 ```{r}
