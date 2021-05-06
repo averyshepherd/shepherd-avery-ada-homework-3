@@ -157,27 +157,74 @@ The confidence interval is smaller for bootstrap
 Write your own function, called boot_lm(), that takes as its arguments a dataframe (d=), a linear model (model=, written as a character string, e.g., “logGS ~ logBM”), a user-defined confidence interval level (conf.level=, with default “0.95”), and a number of bootstrap replicates (reps=, with default “1000”).
 Your function should return a dataframe that includes: the β coefficient names (β0, β1, etc.); the value of the β coefficients, their standard errors, and their upper and lower CI limits for the linear model based on your original dataset; and the mean β coefficient estimates, SEs, and CI limits for those coefficients based on your bootstrap.
 ```{r}
+library(boot)
+
 boot_lm <- function(d, model, conf.level=.95, reps=1000) {
-  object = lm(as.formula(model), d)
-  mod <- lm.boot(object, reps)
-  f$beta0 <- t(samples(mod, "coef"))[,1]
-  f$beta1 <- t(samples(mod, "coef"))[,2]
+  form = as.formula(model)
+  results <- data.frame(beta0 = numeric(),
+                        beta1 = numeric(),
+                        beta0SE = numeric(),
+                        beta1SE = numeric(),
+                        beta0low = numeric(),
+                        beta0upp = numeric(),
+                        beta1low = numeric(),
+                        beta1upp = numeric())
+  for (i in  1:reps) { 
+    data <- d[sample(x = 1:length(d), size = length(d), replace = TRUE),]
+    mod <- lm(form, data)
+    coefs <- coef(summary(mod))
+    confs <- confint(mod)
+    res <- data.frame(beta0 = coefs[1, "Estimate"], 
+                      beta1 = coefs[2, "Estimate"], 
+                      beta0SE = coefs[1, "Std. Error"],
+                      beta1SE = coefs[2, "Std. Error"],
+                      beta0low = confs[1,1], 
+                      beta0upp = confs[1,2],
+                      beta1low = confs[2,1],
+                      beta1upp = confs[2,2])
+    if (nrow(coefs) == 3) {
+      res <- cbind(res, data.frame(beta2 = coefs[3, "Estimate"], 
+                      beta2SE = coefs[3, "Std. Error"],
+                      beta2low = confs[3,1], 
+                      beta2upp = confs[3,2]))
+    }
+    results <- rbind(results, res)
+  }
   
-  glimpse(f)
+  results$meanbeta0 <- mean(results$beta0)
+  results$meanbeta1 <- mean(results$beta1)
+  results$meanbeta0SE <- mean(results$beta0SE)
+  results$meanbeta1SE <- mean(results$beta1SE)
+  results$meanbeta0low <- mean(results$beta0low)
+  results$meanbeta0upp <- mean(results$beta0upp)
+  results$meanbeta1low <- mean(results$beta1low)
+  results$meanbeta1upp <- mean(results$beta1upp)
+  if (nrow(coefs) == 3) {
+    results$meanbeta2 <- mean(results$beta2)
+    results$meanbeta2SE <- mean(results$beta2SE)
+    results$meanbeta2low <- mean(results$beta2low)
+    results$meanbeta2upp <- mean(results$beta2upp)
+  }
+  return(results)
 }
-boot_lm(d, model = "WeaningAge_d ~ Brain_Size_Species_Mean")
 ```
 
+Use your function to run the following models on the “KamilarAndCooperData.csv” dataset:
+log(MeanGroupSize) ~ log(Body_mass_female_mean)
 ```{r}
-
+r <- boot_lm(d, "log(MeanGroupSize) ~ log(Body_mass_female_mean)")
+r
 ```
 
+log(DayLength_km) ~ log(Body_mass_female_mean)
 ```{r}
-
+r <- boot_lm(d, "log(DayLength_km) ~ log(Body_mass_female_mean)")
+r
 ```
 
+log(DayLength_km) ~ log(Body_mass_female_mean) + log(MeanGroupSize)
 ```{r}
-
+r <- boot_lm(d, "log(DayLength_km) ~ log(Body_mass_female_mean) + log(MeanGroupSize)")
+r
 ```
-
 
