@@ -13,6 +13,7 @@ knitr::opts_chunk$set(echo = TRUE)
 library(tidyverse)
 library(infer)
 library(simpleboot)
+library(boot)
 ```
 
 ```{r}
@@ -157,8 +158,6 @@ The confidence interval is smaller for bootstrap
 Write your own function, called boot_lm(), that takes as its arguments a dataframe (d=), a linear model (model=, written as a character string, e.g., “logGS ~ logBM”), a user-defined confidence interval level (conf.level=, with default “0.95”), and a number of bootstrap replicates (reps=, with default “1000”).
 Your function should return a dataframe that includes: the β coefficient names (β0, β1, etc.); the value of the β coefficients, their standard errors, and their upper and lower CI limits for the linear model based on your original dataset; and the mean β coefficient estimates, SEs, and CI limits for those coefficients based on your bootstrap.
 ```{r}
-library(boot)
-
 boot_lm <- function(d, model, conf.level=.95, reps=1000) {
   form = as.formula(model)
   results <- data.frame(beta0 = numeric(),
@@ -213,18 +212,38 @@ Use your function to run the following models on the “KamilarAndCooperData.csv
 log(MeanGroupSize) ~ log(Body_mass_female_mean)
 ```{r}
 r <- boot_lm(d, "log(MeanGroupSize) ~ log(Body_mass_female_mean)")
-r
+glimpse(r)
 ```
 
 log(DayLength_km) ~ log(Body_mass_female_mean)
 ```{r}
 r <- boot_lm(d, "log(DayLength_km) ~ log(Body_mass_female_mean)")
-r
+glimpse(r)
 ```
 
 log(DayLength_km) ~ log(Body_mass_female_mean) + log(MeanGroupSize)
 ```{r}
 r <- boot_lm(d, "log(DayLength_km) ~ log(Body_mass_female_mean) + log(MeanGroupSize)")
-r
+glimpse(r)
 ```
+
+## EXTRA CREDIT:
+Using a loop, run your function from Challenge 3 to generate mean β1 coefficents and lower and upper limits for the 95% CI for the log(MeanGroupSize) ~ log(Body_mass_female_mean) model with different numbers of bootstrap replicates from 10 to 200 by 5s and plot these using {ggplot2}. That is, plot these as three LINES, with the number of replicates as the x aesthetic and the mean, lower CI limit, and upper CI limit from each set of replicates as the y aesthetic. Also plot as a horizontal line the β1 value from the original linear model.
+```{r}
+f <- data.frame(replicates = numeric(),
+                meanb1 = numeric(),
+                meanl = numeric(),
+                meanu = numeric())
+
+for (i in seq(10, 200, by = 5)) {
+  r <- boot_lm(d,"log(MeanGroupSize) ~ log(Body_mass_female_mean)", reps = i)
+  f <- rbind(f, data.frame(replicates = i, 
+                           meanb1 = r$meanbeta1[1], 
+                           meanl = r$meanbeta1low[1], 
+                           meanu = r$meanbeta1upp[1]))
+}
+
+ggplot(f) + geom_line(aes(x = replicates, y = meanb1), color = "red") + geom_line(aes(x = replicates, y = meanl), color = "blue") + geom_line(aes(x = replicates, y = meanu), color = "blue") + geom_hline(yintercept = coef(lm(log(MeanGroupSize) ~ log(Body_mass_female_mean), d))[2], color = "green") + ylab("Beta 1")
+```
+Was not sure what you meant by a line???? so i did this lol
 
